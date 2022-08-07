@@ -1,6 +1,5 @@
 use crate::TIME_STEP;
-use crate::BASE_SPEED;
-use bevy::core::FixedTimestep;
+use bevy::time::FixedTimestep;
 use core::f32::consts::PI;
 use bevy::ecs::schedule::ShouldRun;
 use crate::Velocity;
@@ -108,7 +107,7 @@ fn enemy_movement_system(
     time: Res<Time>, 
     mut query: Query<(&mut Transform, &mut Formation), With<Enemy>>
 ) {
-    let now = time.seconds_since_startup() as f32;
+    let _now = time.seconds_since_startup() as f32;
     for (mut transform, mut formation) in query.iter_mut() {
         let (x_org, y_org) = (transform.translation.x, transform.translation.y);
         let max_distance = TIME_STEP * formation.speed;

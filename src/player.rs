@@ -1,7 +1,7 @@
 use crate::components::ShipStats;
 use bevy::prelude::*;
-use bevy::core::FixedTimestep;
-use crate::{PlayerState, GameTextures, WinSize, PLAYER_RESPAWN_DELAY, PLAYER_SIZE, SPRITE_SCALE, TIME_STEP, BASE_SPEED, PLAYER_LASER_SIZE};
+use bevy::time::FixedTimestep;
+use crate::{PlayerState, GameTextures, WinSize, PLAYER_RESPAWN_DELAY, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE};
 use crate::components::{FromPlayer, Movable, Player, SpriteSize, Velocity, Laser};
 
 pub struct PlayerPlugin;

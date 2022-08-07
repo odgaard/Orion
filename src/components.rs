@@ -1,7 +1,11 @@
-use bevy::core::Timer;
+use bevy::time::Timer;
 use bevy::math::Vec3;
 use bevy::prelude::Component;
 use bevy::math::Vec2;
+
+
+#[derive(Component)]
+pub struct FpsText;
 
 #[derive(Component)]
 pub struct Velocity {

@@ -1,11 +1,10 @@
-#![allow(unused)]
-
 use bevy::utils::HashSet;
 use bevy::math::Vec3Swizzles;
 use bevy::sprite::collide_aabb::collide;
+use bevy::diagnostic::{Diagnostics, FrameTimeDiagnosticsPlugin};
 use bevy::prelude::*;
 
-use crate::components::{FromEnemy, Explosion, ExplosionTimer, ExplosionToSpawn, SpriteSize, Laser, FromPlayer, Enemy, Movable, Velocity, Player};
+use crate::components::{FpsText, FromEnemy, Explosion, ExplosionTimer, ExplosionToSpawn, SpriteSize, Laser, FromPlayer, Enemy, Movable, Velocity, Player};
 use player::PlayerPlugin;
 use enemy::EnemyPlugin;
 
@@ -92,6 +91,7 @@ fn main() {
             ..Default::default()
         })
     .add_plugins(DefaultPlugins)
+    .add_plugin(FrameTimeDiagnosticsPlugin::default())
     .add_plugin(PlayerPlugin)
     .add_plugin(EnemyPlugin)
     .add_startup_system(setup_system)
@@ -100,6 +100,7 @@ fn main() {
     .add_system(enemy_laser_hit_player_system)
     .add_system(explosion_to_spawn_system)
     .add_system(explosion_animation_system)
+    .add_system(text_update_system)
     .run();
 }
 
@@ -107,10 +108,10 @@ fn setup_system(mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut texture_atlases: ResMut<Assets<TextureAtlas>>,
     mut windows: ResMut<Windows>) {
-    commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(Camera2dBundle::default());
 
     let window = windows.get_primary_mut().unwrap();
-    let (win_w, win_h) = (window.width(), window.height());
+    let (_win_w, win_h) = (window.width(), window.height());
 
     window.set_position(IVec2::new(900, 1400));
 
@@ -130,6 +131,28 @@ fn setup_system(mut commands: Commands,
     };
     commands.insert_resource(game_textures);
     commands.insert_resource(EnemyCount(0));
+    commands.spawn_bundle(
+        TextBundle::from_sections([
+            TextSection::new(
+                "FPS: ",
+                TextStyle {
+                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                    font_size: 60.0,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                font_size: 60.0,
+                color: Color::GOLD,
+            }),
+        ])
+        .with_style(Style {
+            align_self: AlignSelf::FlexEnd,
+            ..default()
+        }),
+    )
+    .insert(FpsText);
 }
 
 fn movable_system(
@@ -239,7 +262,7 @@ fn explosion_animation_system(
 fn enemy_laser_hit_player_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
-    mut time: Res<Time>,
+    time: Res<Time>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromEnemy>)>,
     player_query: Query<(Entity, &Transform, &SpriteSize), With<Player>>,
 ) {
@@ -266,3 +289,15 @@ fn enemy_laser_hit_player_system(
         }
     }
 }
+
+
+fn text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
+    for mut text in &mut query {
+        if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
+            if let Some(average) = fps.average() {
+                text.sections[1].value = format!("{average:.2}");
+            }
+        }
+    }
+}
+
