@@ -110,6 +110,7 @@ fn setup_system(mut commands: Commands,
     mut windows: ResMut<Windows>) {
     commands.spawn_bundle(Camera2dBundle::default());
 
+
     let window = windows.get_primary_mut().unwrap();
     let (_win_w, win_h) = (window.width(), window.height());
 
@@ -131,7 +132,41 @@ fn setup_system(mut commands: Commands,
     };
     commands.insert_resource(game_textures);
     commands.insert_resource(EnemyCount(0));
-    commands.spawn_bundle(
+    commands
+        .spawn_bundle(NodeBundle {
+            style: Style {
+                size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                justify_content: JustifyContent::SpaceBetween,
+                ..default()
+            },
+            color: Color::NONE.into(),
+            ..default()
+        })
+    .with_children(|parent| {
+        parent
+            .spawn_bundle(NodeBundle {
+                style: Style {
+                    size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
+                    position_type: PositionType::Absolute,
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::FlexEnd,
+                ..default()
+                },
+                color: Color::NONE.into(),
+                ..default()
+            })
+
+        .with_children(|parent| {
+            parent.spawn_bundle(ImageBundle {
+                style: Style {
+                    size: Size::new(Val::Px(500.0), Val::Auto),
+                ..default()
+                },
+                image: asset_server.load("logo.png").into(),
+                ..default()
+            });
+        });
+    parent.spawn_bundle(
         TextBundle::from_sections([
             TextSection::new(
                 "FPS: ",
@@ -153,6 +188,7 @@ fn setup_system(mut commands: Commands,
         }),
     )
     .insert(FpsText);
+    });
 }
 
 fn movable_system(
