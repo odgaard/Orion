@@ -1,3 +1,4 @@
+use crate::components::ScoreText;
 use bevy::utils::HashSet;
 use bevy::math::Vec3Swizzles;
 use bevy::sprite::collide_aabb::collide;
@@ -53,6 +54,7 @@ struct PlayerState {
     on: bool,
     health: i64,
     last_shot: f64,
+    score: i64,
 }
 impl Default for PlayerState {
     fn default() -> Self {
@@ -60,6 +62,7 @@ impl Default for PlayerState {
             on: false,
             last_shot: -1.,
             health: 3,
+            score: 0,
         }
     }
 }
@@ -70,6 +73,7 @@ impl PlayerState {
         self.last_shot = time;
         if self.health <= 0 {
             self.on = false;        
+            self.score = 0;
         }
     }
 
@@ -77,6 +81,7 @@ impl PlayerState {
         self.on = true;
         self.last_shot = -1.;
         self.health = 3;
+        self.score = 0;
     }
 }
 
@@ -100,7 +105,8 @@ fn main() {
     .add_system(enemy_laser_hit_player_system)
     .add_system(explosion_to_spawn_system)
     .add_system(explosion_animation_system)
-    .add_system(text_update_system)
+    .add_system(fps_update_system)
+    .add_system(score_update_system)
     .run();
 }
 
@@ -159,7 +165,7 @@ fn setup_system(mut commands: Commands,
         .with_children(|parent| {
             parent.spawn_bundle(ImageBundle {
                 style: Style {
-                    size: Size::new(Val::Px(500.0), Val::Auto),
+                    size: Size::new(Val::Px(250.0), Val::Auto),
                 ..default()
                 },
                 image: asset_server.load("logo.png").into(),
@@ -188,6 +194,28 @@ fn setup_system(mut commands: Commands,
         }),
     )
     .insert(FpsText);
+    parent.spawn_bundle(
+        TextBundle::from_sections([
+            TextSection::new(
+                "Score : ",
+                TextStyle {
+                    font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                    font_size: 60.0,
+                    color: Color::WHITE,
+                },
+            ),
+            TextSection::from_style(TextStyle {
+                font: asset_server.load("fonts/FiraMono-Medium.ttf"),
+                font_size: 60.0,
+                color: Color::GREEN,
+            }),
+        ])
+        .with_style(Style {
+            align_self: AlignSelf::FlexEnd,
+            ..default()
+        }),
+    )
+    .insert(ScoreText);
     });
 }
 
@@ -216,6 +244,7 @@ fn movable_system(
 
 fn player_laser_hit_enemy_system(
     mut commands: Commands,
+    mut player_state: ResMut<PlayerState>,
     mut enemy_count: ResMut<EnemyCount>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>
@@ -247,6 +276,7 @@ fn player_laser_hit_enemy_system(
             );
 
             if let Some(_) = collision {
+                player_state.score += 1;
                 commands.entity(enemy_entity).despawn();
                 despawned_entities.insert(enemy_entity);
                 enemy_count.0 -= 1;
@@ -254,7 +284,7 @@ fn player_laser_hit_enemy_system(
                 despawned_entities.insert(laser_entity);
                 commands.spawn().insert(ExplosionToSpawn(enemy_tf.translation.clone()));
             }
-    }
+        }
     }
 }
 
@@ -327,13 +357,23 @@ fn enemy_laser_hit_player_system(
 }
 
 
-fn text_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
+fn fps_update_system(diagnostics: Res<Diagnostics>, mut query: Query<&mut Text, With<FpsText>>) {
     for mut text in &mut query {
         if let Some(fps) = diagnostics.get(FrameTimeDiagnosticsPlugin::FPS) {
             if let Some(average) = fps.average() {
                 text.sections[1].value = format!("{average:.2}");
             }
         }
+    }
+}
+
+fn score_update_system(
+    player_state: ResMut<PlayerState>,
+    mut query: Query<&mut Text, With<ScoreText>>
+) {
+    let score = player_state.score;
+    for mut text in &mut query {
+        text.sections[1].value = format!("{score}");
     }
 }
 

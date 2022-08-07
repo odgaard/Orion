@@ -8,6 +8,9 @@ use bevy::math::Vec2;
 pub struct FpsText;
 
 #[derive(Component)]
+pub struct ScoreText;
+
+#[derive(Component)]
 pub struct Velocity {
     pub x: f32,
     pub y: f32,
