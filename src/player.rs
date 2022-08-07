@@ -98,9 +98,7 @@ fn player_keyboard_event_system(
         } else {
             -velocity.x / ship_stats.decel_speed
         };
-        // velocity.x = clamp(velocity.x, -1., 1.);
-        if velocity.x > ship_stats.max_speed { velocity.x = ship_stats.max_speed }
-        if velocity.x < -ship_stats.max_speed { velocity.x = -ship_stats.max_speed }
+        velocity.x = velocity.x.clamp(-ship_stats.max_speed, ship_stats.max_speed);
 
         velocity.y += if kb.pressed(KeyCode::Up) {
             ship_stats.accel_speed
@@ -109,9 +107,7 @@ fn player_keyboard_event_system(
         } else {
             -velocity.y / ship_stats.decel_speed
         };
-        // velocity.y = clamp(velocity.x, -1., 1.);
-        if velocity.y > ship_stats.max_speed { velocity.y = ship_stats.max_speed }
-        if velocity.y < -ship_stats.max_speed { velocity.y = -ship_stats.max_speed }
+        velocity.y = velocity.y.clamp(-ship_stats.max_speed, ship_stats.max_speed);
     }
 }
 
